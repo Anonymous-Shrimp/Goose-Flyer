@@ -13,9 +13,13 @@ public class Bird : MonoBehaviour
     public Vector2 climbForce;
     public Vector2 diveForce;
     public float walkSpeed;
+    public bool isGrounded = false;
     Vector3 rotate;
     public float turnMultipler = 3;
     public float maxRotate = 80;
+
+    //other
+    public bool isDead = false;
 
     //Controls
     private bool down;
@@ -33,7 +37,7 @@ public class Bird : MonoBehaviour
         down = Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S);
         up = Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W);
 
-        if (down)
+        if (down && !isGrounded)
         {
             Rigid.AddForce(diveForce * Time.deltaTime);
         }
@@ -41,10 +45,14 @@ public class Bird : MonoBehaviour
         {
             Rigid.AddForce(climbForce * Time.deltaTime);
         }
-        else
+        else if (!isGrounded)
         {
             Rigid.AddForce(normalForce * Time.deltaTime);
             
+        }
+        else if (isGrounded)
+        {
+            transform.Translate(new Vector3(2 * Time.deltaTime, 0));
         }
         if(Rigid.velocity.x > 150)
         {
@@ -81,7 +89,42 @@ public class Bird : MonoBehaviour
             rotate.z = -maxRotate;
         }
         transform.rotation = Quaternion.Euler(rotate);
-        print(Rigid.velocity);
+
+        gameObject.SetActive(!isDead);
+
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("ded"))
+        {
+            isDead = true;
+            
+        }
+        if (collision.gameObject.CompareTag("juice"))
+        {
+            FindObjectOfType<rewindManager>().juice += 0.2f;
+            Destroy(collision.gameObject);
+
+        }
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("floor"))
+        {
+            isGrounded = true;
+        }
+        if (collision.gameObject.CompareTag("ded"))
+        {
+            isDead = true;
+
+        }
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("floor"))
+        {
+            isGrounded = false;
+        }
         
     }
 }
